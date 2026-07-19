@@ -1,0 +1,469 @@
+.home-content {
+  --background: #F7F7F8;
+}
+
+.home-content::part(scroll) {
+  padding-bottom: 90px;
+}
+
+.home-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 0;
+}
+
+.topbar-icon {
+  font-size: 24px;
+  color: #1F2937;
+}
+
+.notification-wrapper {
+  position: relative;
+}
+
+.badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #F5811F;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.greeting {
+  padding: 16px 20px 0;
+}
+
+.greeting h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 0 0 4px;
+}
+
+.greeting p {
+  font-size: 14px;
+  color: #6B7280;
+  margin: 0;
+}
+
+/* Status card */
+.status-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  margin: 16px 20px 0;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  gap: 12px;
+}
+
+.status-icon-wrapper {
+  width: 48px;
+  height: 48px;
+  background: #FDECD9;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-icon-wrapper ion-icon {
+  font-size: 24px;
+  color: #F5811F;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.status-label {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.status-value {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1F2937;
+  margin: 2px 0 6px;
+}
+
+.status-checked {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+}
+
+.status-checked .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22C55E;
+}
+
+.checked-text {
+  color: #22C55E;
+  font-weight: 500;
+}
+
+.checked-time {
+  color: #1F2937;
+  font-weight: 600;
+}
+
+.status-check ion-icon {
+  font-size: 32px;
+  color: #22C55E;
+}
+
+/* Attendance card */
+.attendance-card {
+  background: #fff;
+  margin: 16px 20px 0;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #6B7280;
+}
+
+.attendance-row {
+  display: flex;
+  align-items: center;
+  margin: 16px 0;
+}
+
+.attendance-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.col-label {
+  font-size: 12px;
+  color: #9CA3AF;
+  margin-bottom: 4px;
+}
+
+.col-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.col-value.muted {
+  color: #D1D5DB;
+}
+
+.divider-vertical {
+  width: 1px;
+  height: 40px;
+  background: #E5E7EB;
+}
+
+.mode-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid #F3F4F6;
+  margin-bottom: 12px;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #9CA3AF;
+}
+
+.mode-option.active {
+  color: #F5811F;
+  font-weight: 600;
+}
+
+.mode-option ion-icon {
+  font-size: 18px;
+}
+
+.radio {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #D1D5DB;
+  margin-left: 2px;
+}
+
+.radio.checked {
+  border-color: #F5811F;
+  background: radial-gradient(circle, #F5811F 40%, transparent 44%);
+}
+
+.clock-out-btn {
+  width: 100%;
+  background: #F5811F;
+  color: #fff;
+  border: none;
+  border-radius: 14px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.clock-out-btn ion-icon {
+  font-size: 18px;
+}
+
+/* Stats grid */
+.stats-grid {
+  display: flex;
+  background: #fff;
+  margin: 16px 20px 0;
+  padding: 16px 8px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  border-right: 1px solid #F3F4F6;
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-icon {
+  font-size: 20px;
+  margin-bottom: 6px;
+}
+
+.stat-icon.green { color: #22C55E; }
+.stat-icon.orange { color: #F5811F; }
+.stat-icon.blue { color: #3B82F6; }
+.stat-icon.red { color: #EF4444; }
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1F2937;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #6B7280;
+  margin-top: 2px;
+}
+
+.stat-period {
+  font-size: 10px;
+  color: #9CA3AF;
+}
+
+/* List cards (Recent Attendance / Justifications) */
+.list-card {
+  background: #fff;
+  margin: 16px 20px 0;
+  padding: 16px;
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.view-all {
+  font-size: 13px;
+  color: #F5811F;
+  font-weight: 500;
+}
+
+.count-badge {
+  background: #F5811F;
+  color: #fff;
+  font-size: 11px;
+  border-radius: 50%;
+  padding: 1px 6px;
+  margin-left: 6px;
+}
+
+.list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid #F3F4F6;
+}
+
+.list-row:first-of-type {
+  border-top: none;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot.green { background: #22C55E; }
+.dot.orange { background: #F5811F; }
+
+.list-row-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.row-date {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.row-time {
+  font-size: 12px;
+  color: #9CA3AF;
+}
+
+.status-pill {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.status-pill.green {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.status-pill.orange {
+  background: #FDECD9;
+  color: #F5811F;
+}
+
+.chevron {
+  font-size: 16px;
+  color: #D1D5DB;
+}
+
+/* Justifications */
+.justification-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #F3F4F6;
+}
+
+.justification-row:first-of-type {
+  border-top: none;
+}
+
+.date-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #FDECD9;
+  border-radius: 10px;
+  padding: 6px 10px;
+  flex-shrink: 0;
+}
+
+.date-month {
+  font-size: 10px;
+  font-weight: 700;
+  color: #F5811F;
+}
+
+.date-day {
+  font-size: 16px;
+  font-weight: 700;
+  color: #F5811F;
+}
+
+.justification-main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.justification-time {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.justification-note {
+  font-size: 12px;
+  color: #9CA3AF;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Floating clock button */
+.floating-clock-btn {
+  position: fixed;
+  right: 20px;
+  bottom: 90px;
+  background: #F5811F;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(245, 129, 31, 0.4);
+  z-index: 10;
+}
+
+.floating-clock-btn ion-icon {
+  font-size: 20px;
+}
+
+.floating-clock-btn span {
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 2px;
+}
