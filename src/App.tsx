@@ -1,21 +1,11 @@
 import { Redirect, Route } from 'react-router-dom';
 import {
   IonApp,
-  IonIcon,
-  IonLabel,
   IonRouterOutlet,
-  IonTabBar,
-  IonTabButton,
   IonTabs,
   setupIonicReact,
 } from '@ionic/react';
 import { IonReactRouter } from '@ionic/react-router';
-import {
-  homeOutline,
-  calendarOutline,
-  barChartOutline,
-  locationOutline,
-} from 'ionicons/icons';
 
 import Home from './pages/Home';
 import Leave from './pages/Leave';
@@ -25,6 +15,7 @@ import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Whereabouts from './pages/Whereabouts';
 import Justification from './pages/Justification';
+import AuthCallback from './pages/AuthCallback';
 
 setupIonicReact();
 
@@ -34,6 +25,7 @@ function App() {
       <IonReactRouter>
         <IonRouterOutlet>
           <Route exact path="/login" component={Login} />
+          <Route exact path="/auth-callback" component={AuthCallback} />
 
           {/* Tabs live under a single parent route */}
           <Route path="/tabs">

@@ -1,22 +1,38 @@
+import { useEffect, useState } from 'react';
 import { IonIcon } from '@ionic/react';
 import { useHistory, useLocation } from 'react-router-dom';
 import {
   closeOutline,
   homeOutline,
   calendarOutline,
-  barChartOutline,
   personOutline,
-  settingsOutline,
   logOutOutline,
   locationOutline,
   documentTextOutline,
 } from 'ionicons/icons';
 import appLogo from '../assets/logo.png';
 import './Sidebar.css';
+import { logout, viewUserProfile } from '../utils/apiHelper';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+interface UserProfile {
+  emp_id: string;
+  name: string;
+  email: string;
+  phone: string;
+  department: string;
+  floor_location: string; // actually holds grade code, e.g. "MB-PG-3"
+  time_in: string;
+  time_out: string;
+  hour: string;
+  min: string;
+  day: string; // JSON-encoded array of day numbers, e.g. '["2","4","5","3","1"]'
+  workmode: string;
+  workmode_name: string;
 }
 
 const navItems = [
@@ -30,18 +46,37 @@ const navItems = [
   
 ];
 
+const getInitials = (name: string) =>
+  name.split(' ').slice(0, 2).map((n) => n[0]).join('').toUpperCase();
+
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const history = useHistory();
   const location = useLocation();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
 
   const navigate = (path: string) => {
     onClose();
     history.push(path);
   };
 
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    const result = await viewUserProfile(history);
+
+    if (result?.type === 'success' && result.data?.length > 0) {
+      setProfile(result.data[0]);
+    } else {
+      setProfile(null);
+    }
+
+  };
+
   const handleLogout = () => {
     onClose();
-    // TODO: clear auth/session state here
+    logout(history);
     history.replace('/login');
   };
 
@@ -69,10 +104,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
         {/* User */}
         <div className="sidebar-user">
-          <div className="sidebar-avatar">AM</div>
+          <div className="sidebar-avatar">{getInitials(profile?.name || 'User')}</div>
           <div className="sidebar-user-info" onClick={() => navigate('/tabs/profile')}>
-            <span className="sidebar-user-name">Ameruddin</span>
-            <span className="sidebar-user-email">ameruddin@mesiniaga.com</span>
+            <span className="sidebar-user-name">{profile?.name || 'User'}</span>
+            <span className="sidebar-user-email">{profile?.email || 'user@mesiniaga.com'}</span>
           </div>
         </div>
 

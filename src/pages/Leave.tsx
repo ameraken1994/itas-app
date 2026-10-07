@@ -1,75 +1,179 @@
-import { useState } from 'react';
-import { IonContent, IonPage, IonIcon } from '@ionic/react';
+import { useEffect, useState } from 'react';
+import { useHistory } from 'react-router-dom';
+import { IonContent, IonPage, IonIcon, IonModal, IonDatetime, IonSpinner, IonAlert } from '@ionic/react';
 import Sidebar from '../components/Sidebar';
 import {
-  menuOutline,
-  notificationsOutline,
   airplaneOutline,
   medkitOutline,
   calendarOutline,
   chevronDownOutline,
-  chevronForwardOutline,
-  attachOutline,
   checkmarkOutline,
+  homeOutline,
+  businessOutline,
+  trashOutline,
 } from 'ionicons/icons';
+import { addLeave, getFuturePlans, viewLeave, deleteLeave  } from '../utils/apiHelper';
 import './Leave.css';
+import TopBar from '../components/TopBar';
 
 type LeaveTab = 'apply' | 'my';
-type Session = 'full' | 'morning' | 'afternoon';
+
+interface FuturePlan {
+  date: string;
+  status: string; // WFH, WIO, AL, MC
+}
+
+interface LeaveRecord {
+  id: string;
+  datefrom: string;
+  dateto: string;
+  reason: string;
+}
+
+const leaveTypeMap: Record<string, { label: string; icon: any; code: string }> = {
+  'Annual Leave': { label: 'Annual Leave', icon: airplaneOutline, code: 'AL' },
+  'Medical Leave': { label: 'Medical Leave', icon: medkitOutline, code: 'MC' },
+};
+
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+const formatDisplayDate = (isoDate: string) => {
+  const d = new Date(isoDate);
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', weekday: 'short' });
+};
+
+// const formatTableDate = (isoDate: string) => {
+//   const d = new Date(`${isoDate}T00:00:00`);
+//   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+// };
+const formatTableDate = (isoDate: string) => {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
+};
 
 const Leave: React.FC = () => {
   const [tab, setTab] = useState<LeaveTab>('apply');
-  const [session, setSession] = useState<Session>('full');
   const [reason, setReason] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [leaveType, setLeaveType] = useState('Annual Leave');
+  const [submitting, setSubmitting] = useState(false);
 
-  const leaveTypes = [
-    { label: 'Annual Leave', icon: airplaneOutline },
-    { label: 'Medical Leave', icon: medkitOutline },
-  ];
-  const activeType = leaveTypes.find((t) => t.label === leaveType) ?? leaveTypes[0];
+  const [startDate, setStartDate] = useState(todayISO());
+  const [endDate, setEndDate] = useState(todayISO());
+  const [showStartPicker, setShowStartPicker] = useState(false);
+  const [showEndPicker, setShowEndPicker] = useState(false);
 
-  const week = [
-    { day: 'Mon', date: '13 Jul', status: 'wfh', label: 'WFH' },
-    { day: 'Tue', date: '14 Jul', status: 'wfh', label: 'WFH' },
-    { day: 'Wed', date: '15 Jul', status: 'leave', label: 'AL' },
-    { day: 'Thu', date: '16 Jul', status: 'office', label: 'Office' },
-    { day: 'Fri', date: '17 Jul', status: 'leave', label: 'MC', today: true },
-  ];
+  const [weekPlans, setWeekPlans] = useState<FuturePlan[]>([]);
+  const [loadingWeek, setLoadingWeek] = useState(true);
 
-  const history = [
-    { month: 'JUL', day: '15', type: 'Annual Leave', detail: '1 Day • Wed, 15 Jul 2026', status: 'Approved' },
-    { month: 'JUN', day: '10', type: 'Medical Leave', detail: '0.5 Day • Tue, 10 Jun 2026 (Morning)', status: 'Approved' },
-    { month: 'MAY', day: '28-29', type: 'Annual Leave', detail: '2 Days • Wed, 28 May - Thu, 29 May 2026', status: 'Approved' },
-  ];
+  const [leaveHistory, setLeaveHistory] = useState<LeaveRecord[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(true);
 
-  const sessions: { key: Session; label: string }[] = [
-    { key: 'full', label: 'Full Day' },
-    { key: 'morning', label: 'Morning Half' },
-    { key: 'afternoon', label: 'Afternoon Half' },
-  ];
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const navigate = useHistory();
+
+  const activeType = leaveTypeMap[leaveType];
+
+  useEffect(() => {
+    loadWeekPlans();
+    loadLeaveHistory();
+  }, []);
+
+  const loadWeekPlans = async () => {
+    setLoadingWeek(true);
+    const result = await getFuturePlans(navigate);
+
+    if (result?.type === 'success' && Array.isArray(result.data)) {
+      setWeekPlans(result.data);
+    } else {
+      setWeekPlans([]);
+    }
+
+    setLoadingWeek(false);
+  };
+
+  const weekMarkerInfo = (status: string) => {
+    switch (status) {
+      case 'WFH':
+        return { className: 'wfh', icon: homeOutline, label: 'WFH' };
+      case 'AL':
+        return { className: 'leave', icon: airplaneOutline, label: 'AL' };
+      case 'MC':
+        return { className: 'leave', icon: medkitOutline, label: 'MC' };
+      case 'WIO':
+      default:
+        return { className: 'office', icon: businessOutline, label: 'Office' };
+    }
+  };
+
+  const loadLeaveHistory = async () => {
+    setLoadingHistory(true);
+    const result = await viewLeave(navigate);
+
+    if (result?.type === 'success' && Array.isArray(result.data)) {
+      setLeaveHistory(result.data);
+    } else {
+      setLeaveHistory([]);
+    }
+
+    setLoadingHistory(false);
+  };
+
+  const handleDeleteLeave = async () => {
+    if (!deleteId) return;
+
+    setDeleting(true);
+    const result = await deleteLeave(navigate, deleteId);
+
+    if (result?.type === 'success') {
+      await Promise.all([loadLeaveHistory(), loadWeekPlans()]);
+    }
+
+    setDeleting(false);
+    setDeleteId(null);
+  };
+
+
+  const handleSubmit = async () => {
+    if (!reason.trim()) return;
+
+    setSubmitting(true);
+
+    const payload = {
+      fldDatefrom: startDate,
+      fldDateto: endDate,
+      fldHalfday: '0',
+      fldHalfdaysession: '',
+      fldReason: reason,
+      fldType: activeType.code,
+    };
+
+    const result = await addLeave(navigate, payload);
+
+    if (result?.type === 'success') {
+      setReason('');
+      setStartDate(todayISO());
+      setEndDate(todayISO());
+      loadWeekPlans();
+      loadLeaveHistory();
+      // Optionally show a toast here
+    }
+
+    setSubmitting(false);
+  };
 
   return (
     <IonPage>
       <Sidebar isOpen={menuOpen} onClose={() => setMenuOpen(false)} />
       <IonContent fullscreen className="leave-content">
         {/* Top bar */}
-        <div className="leave-topbar">
-          <div className="leave-topbar-left">
-            <IonIcon
-              icon={menuOutline}
-              className="topbar-icon"
-              onClick={() => setMenuOpen(true)}
-            />
-            <h1 className="leave-title">Leave</h1>
-          </div>
-          <div className="notification-wrapper">
-            <IonIcon icon={notificationsOutline} className="topbar-icon" />
-            <span className="badge">2</span>
-          </div>
-        </div>
+        <TopBar title="Leave" onMenuClick={() => setMenuOpen(true)} />
 
         {/* Segment */}
         <div className="leave-segment">
@@ -77,7 +181,7 @@ const Leave: React.FC = () => {
             className={`segment-btn ${tab === 'apply' ? 'active' : ''}`}
             onClick={() => setTab('apply')}
           >
-            Apply Leave
+            Register Leave
           </button>
           <button
             className={`segment-btn ${tab === 'my' ? 'active' : ''}`}
@@ -91,8 +195,8 @@ const Leave: React.FC = () => {
           <>
             {/* Apply Leave form */}
             <div className="leave-card">
-              <span className="card-title">Apply Leave</span>
-              <span className="card-subtitle">Submit a new leave request</span>
+              <span className="card-title">Register Your Leave</span>
+              <span className="card-subtitle">Set your leave details</span>
 
               {/* Leave Type */}
               <div className="form-group">
@@ -115,7 +219,7 @@ const Leave: React.FC = () => {
 
                   {typeOpen && (
                     <div className="select-dropdown">
-                      {leaveTypes.map((t) => (
+                      {Object.values(leaveTypeMap).map((t) => (
                         <button
                           type="button"
                           key={t.label}
@@ -143,38 +247,54 @@ const Leave: React.FC = () => {
               <div className="form-row">
                 <div className="form-group">
                   <label className="form-label">Start Date</label>
-                  <div className="date-field">
+                  <button type="button" className="date-field" onClick={() => setShowStartPicker(true)}>
                     <IonIcon icon={calendarOutline} />
-                    <span>17 July 2026 (Fri)</span>
-                  </div>
+                    <span>{formatDisplayDate(startDate)}</span>
+                  </button>
                 </div>
                 <div className="form-group">
                   <label className="form-label">End Date</label>
-                  <div className="date-field">
+                  <button type="button" className="date-field" onClick={() => setShowEndPicker(true)}>
                     <IonIcon icon={calendarOutline} />
-                    <span>17 July 2026 (Fri)</span>
-                  </div>
+                    <span>{formatDisplayDate(endDate)}</span>
+                  </button>
                 </div>
               </div>
 
-              {/* Session */}
-              {/* <div className="form-group">
-                <label className="form-label">
-                  Session <span className="optional">(Optional)</span>
-                </label>
-                <div className="session-row">
-                  {sessions.map((s) => (
-                    <button
-                      key={s.key}
-                      className={`session-option ${session === s.key ? 'active' : ''}`}
-                      onClick={() => setSession(s.key)}
-                    >
-                      <span className={`radio-dot ${session === s.key ? 'checked' : ''}`} />
-                      <span>{s.label}</span>
-                    </button>
-                  ))}
+              {/* Start date picker modal */}
+              <IonModal isOpen={showStartPicker} onDidDismiss={() => setShowStartPicker(false)} className="date-picker-modal">
+                <IonDatetime
+                  presentation="date"
+                  value={startDate}
+                  onIonChange={(e) => {
+                    const val = e.detail.value as string;
+                    if (val) {
+                      const iso = val.split('T')[0];
+                      setStartDate(iso);
+                      if (endDate < iso) setEndDate(iso);
+                    }
+                  }}
+                />
+                <div className="picker-actions">
+                  <button className="btn-submit" onClick={() => setShowStartPicker(false)}>Done</button>
                 </div>
-              </div> */}
+              </IonModal>
+
+              {/* End date picker modal */}
+              <IonModal isOpen={showEndPicker} onDidDismiss={() => setShowEndPicker(false)} className="date-picker-modal">
+                <IonDatetime
+                  presentation="date"
+                  value={endDate}
+                  min={startDate}
+                  onIonChange={(e) => {
+                    const val = e.detail.value as string;
+                    if (val) setEndDate(val.split('T')[0]);
+                  }}
+                />
+                <div className="picker-actions">
+                  <button className="btn-submit" onClick={() => setShowEndPicker(false)}>Done</button>
+                </div>
+              </IonModal>
 
               {/* Reason */}
               <div className="form-group">
@@ -191,81 +311,120 @@ const Leave: React.FC = () => {
                 </div>
               </div>
 
-              {/* Attachment */}
-              {/* <div className="form-group">
-                <label className="form-label">
-                  Attachment <span className="optional">(Optional)</span>
-                </label>
-                <div className="attachment-row">
-                  <button className="attachment-btn">
-                    <IonIcon icon={attachOutline} />
-                    <span>Add Attachment</span>
-                  </button>
-                  <span className="attachment-hint">Max 5MB</span>
-                </div>
-              </div> */}
-
               {/* Actions */}
               <div className="form-actions">
-                <button className="btn-reset" onClick={() => { setReason(''); setSession('full'); }}>
+                <button
+                  className="btn-reset"
+                  onClick={() => {
+                    setReason('');
+                    setStartDate(todayISO());
+                    setEndDate(todayISO());
+                  }}
+                >
                   Reset
                 </button>
-                <button className="btn-submit">Submit</button>
+                <button className="btn-submit" onClick={handleSubmit} disabled={submitting || !reason.trim()}>
+                  {submitting ? <IonSpinner name="crescent" /> : 'Submit'}
+                </button>
               </div>
             </div>
 
-            {/* Whereabouts */}
+            {/* Whereabouts / Future Plans */}
             <div className="leave-card">
               <div className="list-header">
-                <span className="card-title">This Week Whereabouts Planner</span>
-                {/* <span className="view-all view-calendar">
-                  View Calendar <IonIcon icon={calendarOutline} />
-                </span> */}
+                <span className="card-title">Attendance Plans</span>
               </div>
-              <div className="week-row">
-                {week.map((d) => (
-                  <div className={`week-col ${d.today ? 'today' : ''}`} key={d.day}>
-                    <span className="week-day">{d.day}</span>
-                    <span className="week-date">{d.date}</span>
-                    <span className={`week-marker ${d.status}`}>
-                      {d.label === 'AL' && <IonIcon icon={airplaneOutline} />}
-                      {d.label === 'MC' && <IonIcon icon={medkitOutline} />}
-                    </span>
-                    <span className="week-label">{d.label}</span>
-                  </div>
-                ))}
-              </div>
+
+              {loadingWeek ? (
+                <div className="loading-wrapper">
+                  <IonSpinner name="crescent" />
+                </div>
+              ) : (
+                <div className="week-row">
+                  {weekPlans.map((d) => {
+                    const info = weekMarkerInfo(d.status);
+                    const dateObj = new Date(d.date);
+                    const isToday = d.date === todayISO();
+
+                    return (
+                      <div className={`week-col ${isToday ? 'today' : ''}`} key={d.date}>
+                        <span className="week-day">
+                          {dateObj.toLocaleDateString('en-GB', { weekday: 'short' })}
+                        </span>
+                        <span className="week-date">
+                          {dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                        </span>
+                        <span className={`week-marker ${info.className}`}>
+                          <IonIcon icon={info.icon} />
+                        </span>
+                        <span className="week-label">{info.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </>
         )}
 
         {tab === 'my' && (
-          <>
-          {/* Leave history */}
           <div className="leave-card">
             <div className="list-header">
-              <span className="card-title">My Leave History</span>
-              {/* <span className="view-all">View All</span> */}
+              <span className="card-title">My Leave for Year : {new Date().getFullYear()}</span>
+              <span className="card-title">Total Leave : {leaveHistory.length}</span>
             </div>
-            {history.map((item, i) => (
-              <div className="history-row" key={i}>
-                <div className="date-box">
-                  <span className="date-month">{item.month}</span>
-                  <span className="date-day">{item.day}</span>
-                </div>
-                <div className="history-main">
-                  <span className="history-type">{item.type}</span>
-                  <span className="history-detail">{item.detail}</span>
-                </div>
-                <span className="status-pill green">{item.status}</span>
-                <IonIcon icon={chevronForwardOutline} className="chevron" />
-              </div>
-            ))}
-          </div>
-          </>
-        )}
 
-        
+            {loadingHistory ? (
+              <div className="loading-wrapper">
+                <IonSpinner name="crescent" />
+              </div>
+            ) : leaveHistory.length === 0 ? (
+              <p className="empty-state">No leave records found.</p>
+            ) : (
+              <div className="leave-table-wrapper">
+                <table className="leave-table">
+                  <thead>
+                    <tr>
+                      <th>Start Date</th>
+                      <th>End Date</th>
+                      <th>Reason</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leaveHistory.map((item, i) => (
+                      <tr key={`${item.datefrom}-${i}`}>
+                        <td>{formatTableDate(item.datefrom)}</td>
+                        <td>{formatTableDate(item.dateto)}</td>
+                        <td>{item.reason}</td>
+                        <td>
+                          <button
+                            type="button"
+                            className="icon-btn delete"
+                            aria-label="Delete leave"
+                            onClick={() => setDeleteId(item.id)}
+                          >
+                            <IonIcon icon={trashOutline} />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+  </div>
+        )}
+        <IonAlert
+          isOpen={deleteId !== null}
+          header="Delete Leave"
+          message="Are you sure you want to delete this leave?"
+          onDidDismiss={() => !deleting && setDeleteId(null)}
+          buttons={[
+            { text: 'Cancel', role: 'cancel' },
+            { text: deleting ? 'Deleting...' : 'Delete', role: 'destructive', handler: () => { handleDeleteLeave(); return false; } },
+          ]}
+        />
       </IonContent>
     </IonPage>
   );
