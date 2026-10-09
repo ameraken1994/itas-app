@@ -16,6 +16,7 @@ import Profile from './pages/Profile';
 import Whereabouts from './pages/Whereabouts';
 import Justification from './pages/Justification';
 import AuthCallback from './pages/AuthCallback';
+import AppLaunch from './pages/AppLaunch';
 
 setupIonicReact();
 
@@ -24,7 +25,10 @@ function App() {
     <IonApp>
       <IonReactRouter>
         <IonRouterOutlet>
-          <Route exact path="/login" component={Login} />
+          <Route exact path="/">
+            <AppLaunch />
+          </Route>
+          {/* <Route exact path="/login" component={Login} /> */}
           <Route exact path="/auth-callback" component={AuthCallback} />
 
           {/* Tabs live under a single parent route */}
